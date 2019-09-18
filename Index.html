@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Document</title>
+		<style>
+			* {
+				box-sizing: border-box;
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+
+			.to_do_input {
+				height: 35px;
+				width: 300px;
+				border: 2px solid orange;
+				font-size: 16px;
+				margin: 30px 0 0 50px;
+				
+			}
+
+			.btn__create_task,
+			.btn_sort_task{
+				height: 35px;
+				border: 2px solid black;
+			}
+
+			.btn__create_task {
+				background-color: lightgreen;
+			}
+
+			.btn_sort_task {
+				background-color: yellow;
+			}
+			
+				
+			.done__task {
+				text-decoration: line-through;
+				background-color: #504646;
+			}
+
+			.done,
+			.remove,
+			.correct {
+				border-radius: 5px;
+				border: 1px solid red;
+				height: 30px;
+				width: 80px;
+				margin-left: 40px;
+			}
+
+			li {
+				font-size: 20px;
+				background-color: #86daac;
+				height: 40px;
+				padding: 5px 0 0 10px;
+				margin: 10px 100px 0 50px;
+			}
+			
+			.wrapper {
+				width: 1000px;
+				margin: auto;
+			}
+
+			h1 {
+				margin: 20px 0 0 50px;
+			}
+
+			form {
+				width: 430px;
+				display: inline-block;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<h1>My ToDO List</h1>
+			<form>
+				<input class="to_do_input" type="text" placeholder=" Write your task to do....">
+				<button class="btn__create_task">Create Task</button>
+			</form>
+		
+			<button class="btn_sort_task">Sort not Done</button>
+			<ul id="myList"></ul>
+		</div>
+	
+
+		<script>
+			
+			const toDoList = {
+
+				allTasks: [],
+
+				check(value) {
+					const $isEmptyTask = value.trim();
+					if($isEmptyTask){
+						return toDoList.allTasks.findIndex(item => {
+						return item.toDo === $isEmptyTask;
+					});
+					}
+
+				},
+
+				renderLi(item) {
+					const $li = document.createElement('li');
+					$li.classList.add('toDo_item');
+					$li.innerText = item.toDo;
+				
+					const $thereToPutList = document.querySelector('#myList');
+					$thereToPutList.append($li);
+
+					const $doneButton = document.createElement('button');
+					$doneButton.innerText = 'DONE';
+					$doneButton.classList.add('done');
+					$li.append($doneButton);
+
+					const $removeButton = document.createElement('button');
+					$removeButton.innerText = 'DELETE';
+					$removeButton.classList.add('remove');
+					$li.append($removeButton);
+
+					const $correctButton = document.createElement('button');
+					$correctButton.innerText = 'Correct';
+					$correctButton.classList.add('correct');
+					$li.append($correctButton);
+
+					if(item.isDone) {
+						$li.classList.add('done__task');
+						$doneButton.setAttribute('disabled', true);
+						$correctButton.setAttribute('disabled', true);
+					
+					}
+				},
+
+				createNewTask(e) {
+					e.preventDefault();
+
+					let $taskInput = document.querySelector('.to_do_input').value;
+		
+					const check = toDoList.check($taskInput);
+
+					if(check >= 0) {
+						alert('Такая задача уже есть!!');
+					} else if($taskInput === '' || !check) {
+						alert('Вы ничего не ввели!!');
+					} else {
+						const task = {
+							toDo: $taskInput,
+							isDone: false
+						}
+						toDoList.allTasks.push(task);
+						toDoList.renderLi(task)
+						const $setInStorage = JSON.stringify(toDoList.allTasks);
+
+						localStorage.setItem('Notes', $setInStorage)
+					};
+
+					
+					document.querySelector('.to_do_input').value = '';	
+				},
+
+				doneTask(e) {
+					if(e.target.className === 'done') {
+						e.target.parentNode.classList.add('done__task');
+
+						e.target.setAttribute('disabled', true);
+
+						e.target.parentNode.lastChild.setAttribute('disabled', true); 
+
+						const getNotes = localStorage.getItem('Notes');
+		
+						const parseNotes = JSON.parse(getNotes);
+				
+						const findTask = parseNotes.findIndex(task => {
+	
+							const textTask = e.target.parentNode.childNodes[0].textContent;
+						
+							if(task.toDo === textTask) {
+								return task
+							}
+						});
+
+						parseNotes[findTask].isDone = !parseNotes[findTask].isDone;
+
+						const setNote= JSON.stringify(parseNotes);
+						localStorage.setItem('Notes' , setNote);
+
+					}
+				},
+
+				deleteTask(e) {
+					if(e.target.className === 'remove' && confirm('Точно удалить?')) {
+						e.target.parentNode.classList.add('remove__task');
+
+						const findTask = toDoList.allTasks.findIndex(task => {
+	
+							const textTask = e.target.parentNode.childNodes[0].textContent;
+						
+							if(task.toDo === textTask) {
+								return task
+							}
+						});
+
+						toDoList.allTasks.splice(findTask, 1);
+
+						const $removeItem = document.querySelector('.remove__task');
+
+						$removeItem.remove();
+
+						const getNotes = localStorage.getItem('Notes');
+							
+						const parseNotes = JSON.parse(getNotes);
+
+						const find = parseNotes.findIndex(task => {
+	
+								const textTask = e.target.parentNode.childNodes[0].textContent;
+						
+								if(task.toDo === textTask) {
+									return task
+								}
+						});
+
+						parseNotes.splice(find, 1);
+
+						const setNote = JSON.stringify(parseNotes);
+
+						localStorage.setItem('Notes' , setNote);
+
+					}
+	
+				},
+
+				correctTask(e) {
+					if(e.target.className === 'correct') {
+						const findTask = toDoList.allTasks.findIndex(task => {
+	
+							const textTask = e.target.parentNode.childNodes[0].textContent;
+						
+							if(task.toDo === textTask) {
+								return task
+							}
+						});
+
+						const correctTask = prompt('на что меняем?');
+
+						const check = toDoList.check(correctTask);
+						
+						if(check >= 0) {
+							alert('Такая задача уже есть!!');
+						} else if(correctTask === '' || !check) {
+							alert('Вы ничего не ввели!!');
+						} else {
+							const getNotes = localStorage.getItem('Notes');
+							
+							const parseNotes = JSON.parse(getNotes);
+
+							const find = parseNotes.findIndex(task => {
+	
+								const textTask = e.target.parentNode.childNodes[0].textContent;
+						
+								if(task.toDo === textTask) {
+									return task
+								}
+							});
+
+							parseNotes[findTask].toDo = correctTask;
+
+							const setNote = JSON.stringify(parseNotes);
+
+							localStorage.setItem('Notes' , setNote);
+
+							e.target.parentElement.firstChild.textContent = correctTask;
+							toDoList.allTasks[findTask].toDo = correctTask;			
+						}		
+					}
+				},
+
+				sortTask(e) {
+					count = 0;
+
+					return function() {
+						const a = document.querySelectorAll('.done__task');
+						
+						if(count%2 === 0) {
+							++count;
+
+							a.forEach(item => {
+								return item.hidden = true;
+							}) 
+						} else {
+							++count;
+
+							a.forEach(item => {
+								return item.hidden = false;
+							}) 
+			
+						};
+					}	
+				}
+			};
+
+			const isNotCleaneStorage = function() {
+				localNotes = localStorage.getItem('Notes');	
+
+				if(localNotes) {
+
+				notes = [...JSON.parse(localNotes)]
+
+				notes.forEach(item => {
+					toDoList.allTasks.push(item)
+				})
+		
+				notes.forEach(toDoList.renderLi)
+			}
+			};
+			
+
+			isNotCleaneStorage();
+
+			
+
+
+
+			const $buttonCreateTask = document.querySelector('.btn__create_task'); //кнопка создания
+			$buttonCreateTask.addEventListener('click', toDoList.createNewTask); // создает лист
+
+		
+			const $buttonDoneTask = document.querySelector('#myList');  // кнопка done
+			$buttonDoneTask.addEventListener('click' , toDoList.doneTask); // отмечает сделаное 
+
+			const $buttonRemoveTask = document.querySelector('#myList');  // кнопка delete
+			$buttonRemoveTask.addEventListener('click' , toDoList.deleteTask);
+
+			const $buttonCorrectTask = document.querySelector('#myList');  // кнопка correct
+			$buttonRemoveTask.addEventListener('click' , toDoList.correctTask);
+
+			const $sortTask = document.querySelector('.btn_sort_task');
+			$sortTask.addEventListener('click', toDoList.sortTask());
+		</script>
+		</script>
+		
+	</body>
+</html>

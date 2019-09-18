@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Document</title>
+		<style>
+			*{
+				box-sizing: border-box;
+			}
+			.wrapper {
+				width: 600px;
+				margin: auto;
+			}
+			.films {
+				height: 30px;
+			}
+
+			.btn_ship {
+				height: 30px;
+				width: 80px;
+				background-color: lightgreen;
+				border: 1px solid green;
+			}
+
+			li {
+				padding: 5px 0;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<h1>CHOSE THE SHIP</h1>
+			<form>
+				<select class="ships"></select>
+				<button class="btn_ship">Show</button>
+			</form>
+			<div class="info"></div>
+			</div>
+		<script>
+			const xhr = new XMLHttpRequest();
+			xhr.open('get', 'https://swapi.co/api/starships/');
+			xhr.send();
+			xhr.onload = function() {
+				const getAllShips = this.responseText;
+				const shipsInfo = JSON.parse(getAllShips);
+				const ships = shipsInfo.results;
+				ships.forEach((item) => {
+					const select = document.querySelector('.ships');	
+					const option = document.createElement('option');	
+					option.innerText = item.name;
+					select.append(option)
+				})
+
+			};
+
+			let $but = document.querySelector('.btn_ship');
+
+			$but.addEventListener('click', function(e) {
+				e.preventDefault();
+
+				const getShipsName = document.querySelector('select').value;
+
+
+				const xhr = new XMLHttpRequest();
+				xhr.open('get', 'https://swapi.co/api/starships/');
+				xhr.send();
+				xhr.onload = function() {
+					const getAllShips = this.responseText;
+
+					const shipsInfo = JSON.parse(getAllShips);
+
+					const ships = shipsInfo.results;
+
+					const result = ships.findIndex(item => {
+						if(item.name === getShipsName){
+							const $getUl = document.querySelector('.ul');
+							if($getUl) {
+								$getUl.remove();
+							}	
+
+							const $ul = document.createElement('ul');
+							$ul.classList.add('ul');
+
+							for(key in item) {
+							
+								if(typeof item[key] === 'object' /*|| key === 'url'*/){
+									
+
+									const $li = document.createElement('li');
+									$li.innerText = key
+
+									const $select = document.createElement('select')
+
+
+									item[key].forEach(item =>{
+										
+										let xhr = new XMLHttpRequest();
+										xhr.open('get', item);
+										xhr.send();
+										xhr.onload = function() {
+											const getFilms = this.responseText;
+											const filmsInfo = JSON.parse(getFilms);
+
+											const $option = document.createElement('option');
+											if(filmsInfo.title) {
+												$option.innerText = filmsInfo.title;
+											}else if(filmsInfo.name) {
+												$option.innerText = filmsInfo.name;
+											}
+											
+
+											$select.append($option);
+										}
+
+										$li.append($select);
+
+									})
+
+									$ul.append($li)
+								} else {
+									const $li = document.createElement('li');
+									$li.innerText = key + ' - ' + item[key];
+
+									$ul.append($li);
+								}	
+
+							}
+
+							const $find = document.querySelector('.info')
+							$find.append($ul)
+
+						}
+					})
+
+				}
+
+			})
+			
+
+
+		</script>
+	</body>
+</html>
